@@ -2,7 +2,11 @@ __author__ = 'H. Zhu'
 
 import tensorflow as tf
 
+
 class Reconstructor:
+    def __init__(self, training=True):
+        self.training = training
+
     def _decode(self, inputs):
         """decode
         This
@@ -29,26 +33,33 @@ class Reconstructor:
 
     def _deconv2d(self, inputs, out, kernel=4, stride=2, activation=tf.nn.relu, batch_norm=True, e=1e-3):
         outputs = tf.layers.conv2d_transpose(
-            inputs, out, kernel, stride, activation=activation, padding='same'
+            inputs, out, kernel, stride, padding='same'
         )
         if batch_norm:
-            outputs = tf.layers.batch_normalization(outputs, epsilon=e)
+            outputs = tf.layers.batch_normalization(outputs, epsilon=e, training=self.training)
+        if activation is not None:
+            outputs = activation(outputs)
         return outputs
 
-    def _deconv3d(self, inputs, out, kernel=(4, 8, 8), stride=(2, 4, 4), activation=tf.nn.relu, batch_norm=True, e=1e-3):
+    def _deconv3d(self, inputs, out, kernel=(4, 8, 8), stride=(2, 4, 4), activation=tf.nn.relu, batch_norm=True,
+                  e=1e-3):
         outputs = tf.layers.conv3d_transpose(
-            inputs, out, kernel, stride, activation=activation, padding='same'
+            inputs, out, kernel, stride, padding='same'
         )
         if batch_norm:
-            outputs = tf.layers.batch_normalization(outputs, epsilon=e)
+            outputs = tf.layers.batch_normalization(outputs, epsilon=e, training=self.training)
+        if activation is not None:
+            outputs = activation(outputs)
         return outputs
 
     def _conv2d(self, inputs, out, kernel=4, stride=2, activation=tf.nn.relu, batch_norm=True, e=1e-3):
         outputs = tf.layers.conv2d(
-            inputs, out, kernel, stride, activation=activation, padding='same'
+            inputs, out, kernel, stride, padding='same'
         )
         if batch_norm:
-            outputs = tf.layers.batch_normalization(outputs, epsilon=e)
+            outputs = tf.layers.batch_normalization(outputs, epsilon=e, training=self.training)
+        if activation is not None:
+            outputs = activation(outputs)
         return outputs
 
     def reconstruct(self, inputs, first_frame):
@@ -59,5 +70,3 @@ class Reconstructor:
         mask = self._deconv3d(inputs, 1)
         outputs = mask * foreground + (1 - mask) * background_expand
         return outputs
-
-
